@@ -1,0 +1,306 @@
+{% extends "layout.html" %}
+{% block content %}
+<script>
+    let slideIndex = 0;
+    let isTransitioning = false;
+
+    function showSlides() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        const slidesContainer = document.querySelector('.slideshow-wrapper');
+        const slides = document.querySelectorAll('.mySlides');
+        const totalSlides = slides.length;
+
+        slideIndex++;
+        slidesContainer.style.transition = 'transform 1s ease-in-out';
+        slidesContainer.style.transform = `translateX(-${slideIndex * 100}%)`;
+
+        slidesContainer.addEventListener('transitionend', () => {
+            if (slideIndex === totalSlides - 1) {
+                slideIndex = 0;
+                slidesContainer.style.transition = 'none';
+                slidesContainer.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    slidesContainer.style.transition = 'transform 1s ease-in-out';
+                }, 50);
+            }
+            isTransitioning = false;
+        }, { once: true });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const slidesContainer = document.querySelector('.slideshow-wrapper');
+        const slides = document.querySelectorAll('.mySlides');
+        const firstSlideClone = slides[0].cloneNode(true);
+        slidesContainer.appendChild(firstSlideClone);
+
+        setInterval(showSlides, 3000); // 3초마다 이미지 변경
+
+        // 화살표 클릭 이벤트 리스너 추가
+        const arrowElement = document.querySelector('.arrow');
+        arrowElement.addEventListener('click', function() {
+            window.location.href = "{{ url_for('about') }}";
+        });
+    });
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('planModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+<body>
+
+    <div class="slideshow-container" style="width: 100vw; height: 70vh; position: relative; background-color: rgb(185, 255, 214); overflow: hidden;">
+        <div class="slideshow-wrapper" style="display: flex; transition: transform 1s ease-in-out;">
+            <div class="mySlides">
+                <img src="static/img/show1.png" style="width:100%; height: 70vh; object-fit: cover;">
+            </div>
+            <div class="mySlides">
+                <img src="static/img/show2.png" style="width:100%; height: 70vh; object-fit: cover;">
+            </div>
+            <div class="mySlides">
+                <img src="static/img/show3.png" style="width:100%; height: 70vh; object-fit: cover;">
+            </div>
+            <div class="mySlides">
+                <img src="static/img/show4.png" style="width:100%; height: 70vh; object-fit: cover;">
+            </div>
+            <div class="mySlides">
+                <img src="static/img/show5.png" style="width:100%; height: 70vh; object-fit: cover;">
+            </div>
+        </div>
+        <div class="overlay"></div>
+        <div class="text-container">
+            <h1 class="fade-in" style="animation-delay: 0s; font-size: 3em;">UM<span style="color: rgb(132, 255, 214);">M</span>M</h1>
+            <h2 class="fade-in" style="animation-delay: 1s; font-size: 1.5em;">
+                For Your <span style="color: rgb(132, 255, 214);">M</span>agical <span style="color: rgb(132, 255, 214);">M</span>oment
+            </h2>
+        </div>
+    </div>
+
+    <div style="width: 100vw; height: 125vh; position: relative; overflow: hidden;">
+        <div class="overlay2">
+            <div class="circle"></div>
+            <div class="text-box">
+                <h1>UM<span style="color: rgb(132, 255, 214);">M</span>M은 무엇인가요?</h1>
+                <h2>UMMM은 당신의 최고의 여행 도우미입니다!</h2>
+                <div class="arrow" style="color: rgb(72, 255, 145);">→</div>
+            </div>
+            <div class="triangle"></div>
+            <div class="square"></div>
+            <div class="info-boxes">
+                <div class="info-box">
+                    <img src="static/img/box1.png" style="width: 150px; height: 150px; object-fit: cover;">
+                    <p>여행지를 탐색하고</p>
+                </div>
+                <div class="info-box">
+                    <img src="static/img/box2.png" style="width: 150px; height: 150px; object-fit: cover;">
+                    <p>계획을 짜고</p>
+                </div>
+                <div class="info-box">
+                    <img src="static/img/box3.png" style="width: 150px; height: 150px; object-fit: cover;">
+                    <p>여행을 즐기세요!</p>
+                </div>
+            </div>
+            <hr/>
+            <!--Section: Posts-->
+            <section class="p-3 text-center">
+                <h3 class="text-center py-3 text-decoration-underline fw-bold mb-5">최근 게시판</h3>
+
+                <div class="row gx-lg-5">
+
+                    <!-- latest blog post Column -->
+                    {% for post in posts %}
+                    <div class="col-lg-4 col-md-12 mb-4">
+                        <div class="card rounded-6 h-100">
+                            <div class="bg-image hover-overlay ripple mx-3 shadow-4-strong rounded-6 mt-n3"
+                                data-mdb-ripple-color="light">
+                                <!-- blog post image -->
+                                <img src="{{ url_for('display_image', filename=post.image) }}" class="w-100" style="height: 250px; object-fit: cover;">
+                                <!-- blog post image -->
+
+                                <!-- blog post link detail -->
+                                <a href="{{ url_for('posts_detail', id=post._id) }}">
+                                    <div class="mask" style="background-color: rgba(251, 251, 251, 0.15);"></div>
+                                </a>
+                                <!-- blog post link detail -->
+
+                            </div>
+                            <div class="card-body">
+                                <!-- blog post title -->
+                                <h5 class="card-title">{{ post.title }}</h5>
+                                <!-- blog post title -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- latest blog post Column -->
+                    {% endfor %}
+
+                </div>
+
+                <!-- more post button -->
+                <a class="btn btn-secondary btn-rounded" href="{{ url_for('posts') }}" role="button">See more posts</a>
+                <!-- more post button -->
+
+            </section>
+            <!--Section: Posts-->
+        </div>
+    </div>
+    
+    <style>
+        .container {
+            padding: 20px;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 60%; 
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7); 
+            clip-path: polygon(0 0, 100% 0, 40% 100%, 0 100%);
+            z-index: 1;
+        }
+        .overlay2 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            background: rgb(255, 255, 255); 
+            overflow: hidden; 
+        }
+        .mySlides {
+            flex: 0 0 100%;
+            position: relative;
+        }
+        .text-container {
+            position: absolute;
+            top: 50%;
+            left: 10%; 
+            transform: translateY(-50%); 
+            color: white;
+            text-align: left;
+            text-shadow: 5px 5px 7px rgba(0, 0, 0, 1); 
+            z-index: 2;
+            width: 80%;
+        }
+        .text-container h1, .text-container h2 {
+            margin: 0;
+        }
+        .start-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start-button:hover {
+            background-color: #0056b3;
+        }
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        .circle {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(130, 255, 150, 0.5);
+            border-radius: 50%;
+            top: 20%;
+            left: 20%;
+            animation: moveCircle 5s infinite;
+        }
+        .triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 100px solid rgba(130, 255, 150, 0.5);
+            top: 50%;
+            left: 70%;
+            animation: moveTriangle 7s infinite;
+        }
+        .square {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: rgba(130, 255, 150, 0.5);
+            top: 80%;
+            left: 40%;
+            animation: moveSquare 6s infinite;
+        }
+        @keyframes moveCircle {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(50px, 50px); }
+            100% { transform: translate(0, 0); }
+        }
+        @keyframes moveTriangle {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-50px, -50px); }
+            100% { transform: translate(0, 0); }
+        }
+        @keyframes moveSquare {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 30px); }
+            100% { transform: translate(0, 0); }
+        }
+        .text-box {
+            position: absolute;
+            top: 20%;
+            left: 10%;
+            transform: translateY(-50%);
+            color: black;
+            text-align: left;
+            z-index: 2;
+            width: 80%;
+        }
+        .text-box h1 {
+            font-size: 3em;
+            margin: 0;
+        }
+        .text-box h2 {
+            font-size: 1.5em;
+            margin: 10px 0 0 0;
+        }
+        .arrow {
+            font-size: 3em;
+            color: black;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .info-boxes {
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            margin: 200px auto 50px auto; /* Adjusted margin to prevent overlap */
+            text-align: center;
+            z-index: 2; /* Ensure it appears on top of other elements */
+        }
+        .info-box {
+            width: 30%;
+        }
+        .info-box img {
+            width: 100%;
+            height: auto;
+        }
+        .info-box p {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: black;
+        }
+    </style>
+</body>
+{% endblock %}

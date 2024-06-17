@@ -1,0 +1,271 @@
+{% extends "layout.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>UMMM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            padding: 20px;
+        }
+        .plan-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .plan-item h2 {
+            margin: 0;
+        }
+        .plan-buttons {
+            display: none;
+            margin-top: 10px;
+        }
+        .plan-buttons button {
+            margin-right: 10px;
+        }
+        .back-button {
+            margin-top: 20px;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn-4 {
+            background-color: #4dccc6;
+            background-image: linear-gradient(315deg, #4dccc6 0%, #96e4df 74%);
+            line-height: 30px;
+            padding: 0px 10px;
+            border: none;
+            color: rgb(255, 255, 255);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            font-size: 14px;
+        }
+        .btn-4:hover {
+            background-color: #89d8d3;
+            background-image: linear-gradient(315deg, #89d8d3 0%, #03c8a8 74%);
+        }
+        .btn-4 span {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .btn-4:before,
+        .btn-4:after {
+            position: absolute;
+            content: "";
+            right: 0;
+            top: 0;
+            box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                        -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                        inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                        inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+            transition: all 0.3s ease;
+        }
+        .btn-4:before {
+            height: 0%;
+            width: .1px;
+        }
+        .btn-4:after {
+            width: 0%;
+            height: .1px;
+        }
+        .btn-4:hover:before {
+            height: 100%;
+        }
+        .btn-4:hover:after {
+            width: 100%;
+        }
+        .btn-4 span:before,
+        .btn-4 span:after {
+            position: absolute;
+            content: "";
+            left: 0;
+            bottom: 0;
+            box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                        -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                        inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                        inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+            transition: all 0.3s ease;
+        }
+        .btn-4 span:before {
+            width: .1px;
+            height: 0%;
+        }
+        .btn-4 span:after {
+            width: 0%;
+            height: .1px;
+        }
+        .btn-4 span:hover:before {
+            height: 100%;
+        }
+        .btn-4 span:hover:after {
+            width: 100%;
+        }
+    </style>
+    <script>
+        let selectedPlanId = null;
+
+        async function fetchPlans() {
+            try {
+                const response = await fetch('/api/plans');
+                const plans = await response.json();
+                renderPlansList(plans);
+            } catch (error) {
+                console.error('Error fetching plans:', error);
+            }
+        }
+        function renderPlansList(plans) {
+            const list = document.getElementById('plans-list');
+            list.innerHTML = plans.map(plan => `
+                <div style="border-color: #4dccc6;" class="plan-item" onclick="selectPlan('${plan._id}')">
+                    <h2>${plan.title}</h2>
+                    <div id="buttons-${plan._id}" class="plan-buttons">
+                        <button class="btn-4" onclick="event.stopPropagation(); viewPlan('${plan._id}')">보기</button>
+                        <button class="btn-4" onclick="event.stopPropagation(); editPlan('${plan._id}')">수정하기</button>
+                        <button class="btn-4" onclick="event.stopPropagation(); deletePlan('${plan._id}')">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectPlan(planId) {
+            if (selectedPlanId) {
+                document.getElementById(`buttons-${selectedPlanId}`).style.display = 'none';
+            }
+            selectedPlanId = planId;
+            document.getElementById(`buttons-${planId}`).style.display = 'block';
+        }
+
+        async function viewPlan(planId) {
+            try {
+                const response = await fetch(`/api/plans/${planId}`);
+                const plan = await response.json();
+                showModal(plan);
+            } catch (error) {
+                console.error('Error viewing plan:', error);
+            }
+        }
+
+        function editPlan(planId) {
+            window.location.href = `/editor?planId=${planId}`;
+        }
+
+        async function deletePlan(planId) {
+            if (confirm('정말로 이 일정을 삭제하시겠습니까?')) {
+                try {
+                    const response = await fetch('/delete_plan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ _id: planId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('일정이 삭제되었습니다.');
+                        selectedPlanId = null;  // 삭제 후 선택된 계획 ID 초기화
+                        fetchPlans();  // UI를 다시 렌더링하여 업데이트
+                    } else {
+                        alert(result.error);
+                    }
+                } catch (error) {
+                    console.error('Error deleting plan:', error);
+                }
+            }
+        }
+
+        function showModal(plan) {
+            const modal = document.getElementById('planModal');
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = `
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>${plan.title}</h2>
+                <p>Start Date: ${plan.start_date}</p>
+                <p>End Date: ${plan.end_date}</p>
+                <h3>Plans:</h3>
+                ${Object.keys(plan.plans).map(date => `
+                    <div>
+                        <h4>${date}</h4>
+                        <ul>
+                            ${plan.plans[date].map(item => `
+                                <li>
+                                    Time: ${item.time}, Place: ${item.placeName}, Details: ${item.details}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+            `;
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('planModal').style.display = "none";
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchPlans();
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('planModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>여행 일정 목록</h1>
+        <div id="plans-list"></div>
+        <div class="back-button">
+            <button onclick="window.location.href='/editor'" class="btn-4">계획 추가</button>
+        </div>
+    </div>
+
+    <!-- The Modal -->
+    <div id="planModal" class="modal">
+        <div id="modal-content" class="modal-content">
+            <!-- Plan details will be injected here -->
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}

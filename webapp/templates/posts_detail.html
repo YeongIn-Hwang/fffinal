@@ -1,0 +1,208 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        padding: 20px;
+    }
+    .plan-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .plan-item h2 {
+        margin: 0;
+    }
+    .plan-buttons {
+        display: none;
+        margin-top: 10px;
+    }
+    .plan-buttons button {
+        margin-right: 10px;
+    }
+    .back-button {
+        margin-top: 20px;
+    }
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-4 {
+        background-color: #4dccc6;
+        background-image: linear-gradient(315deg, #4dccc6 0%, #96e4df 74%);
+        line-height: 30px;
+        padding: 0px 10px;
+        border: none;
+        color: rgb(255, 255, 255);
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+        font-size: 14px;
+    }
+    .btn-4:hover {
+        background-color: #89d8d3;
+        background-image: linear-gradient(315deg, #89d8d3 0%, #03c8a8 74%);
+    }
+    .btn-4 span {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .btn-4:before,
+    .btn-4:after {
+        position: absolute;
+        content: "";
+        right: 0;
+        top: 0;
+        box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                    -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                    inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                    inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+        transition: all 0.3s ease;
+    }
+    .btn-4:before {
+        height: 0%;
+        width: .1px;
+    }
+    .btn-4:after {
+        width: 0%;
+        height: .1px;
+    }
+    .btn-4:hover:before {
+        height: 100%;
+    }
+    .btn-4:hover:after {
+        width: 100%;
+    }
+    .btn-4 span:before,
+    .btn-4 span:after {
+        position: absolute;
+        content: "";
+        left: 0;
+        bottom: 0;
+        box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                    -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                    inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                    inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+        transition: all 0.3s ease;
+    }
+    .btn-4 span:before {
+        width: .1px;
+        height: 0%;
+    }
+    .btn-4 span:after {
+        width: 0%;
+        height: .1px;
+    }
+    .btn-4 span:hover:before {
+        height: 100%;
+    }
+    .btn-4 span:hover:after {
+        width: 100%;
+    }
+</style>
+<section class="my-3">
+    {% if data %}
+    <h4 class="text-center py-3 text-decoration-underline">{{ data.title }}</h4>
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <!-- 게시물 작성자 이메일 제거 -->
+        </div>
+    </div>
+    <section>
+        {% for line in data.content.splitlines() %}
+            <p>{{ line|e }}</p>
+        {% endfor %}
+        {% if data.image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ data.image) }}" alt="Post Image" class="img-fluid">
+        {% endif %}
+    </section>
+    <section class="text-center py-4 mb-4">
+        <form action="{{ url_for('recommend_post', id=data._id) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn-4" {% if session.user_email in data.recommendations %}disabled{% endif %}>Recommend</button>
+        </form>
+        <div class="mt-2">추천: {{ data.likes }}</div>
+    </section>
+    {% if session.user_email == data.author %}
+    <section class="text-center py-4 mb-4">
+        <a href="{{ url_for('admin_update_post', id=data._id) }}" class="btn-4">Edit</a>
+        <form action="{{ url_for('admin_delete_post', id=data._id) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn-4">Delete</button>
+        </form>
+    </section>
+    {% endif %}
+    <section class="border-bottom mb-3">
+        {% if data.comments %}
+        <p class="text-center"><strong>Comments: {{ data.comments|length }}</strong></p>
+        {% for comment in data.comments %}
+        <div class="row mb-4">
+            <div class="col-1">
+                <img src="https://www.gravatar.com/avatar/{{ comment.email|e }}" class="img-fluid shadow-1-strong rounded-5" alt="" />
+            </div>
+            <div class="col-11">
+                <p class="mb-2"><strong>{{ comment.name|e }}</strong> on {{ comment.created_date }}</p> <!-- 이름과 작성일 표시 -->
+                <p>{{ comment.content|e }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </section>
+    <section>
+        {% include "flashmessage.html" %}
+        <p class="text-center"><strong>Leave a comment</strong></p>
+        <form action="{{ url_for('new_comment', id=data._id) }}" method="POST">
+            <div class="form-outline mb-4">
+                <input type="text" name="name" id="form4Example1" class="form-control" required />
+                <label class="form-label" for="form4Example1">Name</label>
+            </div>
+            <div class="form-outline mb-4">
+                <input type="email" name="email" id="form4Example2" class="form-control" required />
+                <label class="form-label" for="form4Example2">Email address</label>
+            </div>
+            <div class="form-outline mb-4">
+                <textarea class="form-control" name="content" id="form4Example3" rows="4" required></textarea>
+                <label class="form-label" for="form4Example3">Text</label>
+            </div>
+            <input type="hidden" name="_id" value="{{ data._id }}" />
+            <button type="submit" class="btn-4">Publish</button>
+        </form>
+    </section>
+    {% else %}
+    <h4 class="text-center py-3 text-decoration-underline">Sorry. Data is not found.</h4>
+    {% endif %}
+</section>
+{% endblock %}

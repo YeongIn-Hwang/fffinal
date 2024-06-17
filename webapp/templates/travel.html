@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .container {
+        padding: 20px;
+    }
+    .reduced-height {
+        height: 85vh; /* 이미지 높이를 70vh로 줄입니다 */
+    }
+    .city-info {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+    }
+    .info-box {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7); /* 투명도를 약간 짙게 조정 */
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .nav-button {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(0, 0, 0, 0.7); /* 투명도를 약간 짙게 조정 */
+        color: white;
+        border: none;
+        font-size: 1.5em;
+        padding: 10px;
+        cursor: pointer;
+        z-index: 10;
+    }
+    .nav-button.left {
+        left: 10px;
+    }
+    .nav-button.right {
+        right: 10px;
+    }
+</style>
+<body>
+<div class="container-fluid h-100 p-0">
+    <div class="row h-100 no-gutters">
+        <div class="col-md-12 reduced-height position-relative p-0">
+            <button class="nav-button left" onclick="prevCity()">&#10094;</button>
+            <button class="nav-button right" onclick="nextCity()">&#10095;</button>
+            <div id="city-info" class="city-info">
+                <div class="info-box" id="city-details">
+                    <!-- 도시 정보가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let cities = [];
+    let currentCityIndex = 0;
+
+    axios.get('/api/travel/cities').then(function (response) {
+        cities = response.data;
+        if (cities.length > 0) {
+            displayCityInfo(0);
+        }
+    });
+
+    function displayCityInfo(index) {
+        currentCityIndex = index;
+        const city = cities[index];
+        const cityInfo = document.getElementById('city-info');
+        const cityDetails = document.getElementById('city-details');
+        cityInfo.style.backgroundImage = `url('/static/img/${city.image}')`;
+        cityDetails.innerHTML = `<h2>${city.region}</h2>
+                                 <h4>${city.catch}</h4>
+                                 <p>${city.about}</p>`;
+    }
+
+    window.prevCity = function() {
+        if (currentCityIndex > 0) {
+            displayCityInfo(currentCityIndex - 1);
+        } else {
+            displayCityInfo(cities.length - 1);
+        }
+    };
+
+    window.nextCity = function() {
+        if (currentCityIndex < cities.length - 1) {
+            displayCityInfo(currentCityIndex + 1);
+        } else {
+            displayCityInfo(0);
+        }
+    };
+});
+</script>
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,843 @@
+{% extends "layout.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .container {
+            padding: 20px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            width: 100vw;
+        }
+        .sidebar {
+            width: 200px;
+            border-right: 1px solid #ccc;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .sidebar button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            line-height: 42px;
+            padding: 0;
+            border: none;
+        }
+        .content {
+            flex-grow: 1;
+            max-height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .itinerary {
+            flex-grow: 1;
+            max-height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid #ccc;
+        }
+        .map-container {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 300px;
+            z-index: 1000;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .map-container #map {
+            height: 100%;
+            width: 100%;
+        }
+        .hidden {
+            display: none;
+        }
+        .step {
+            margin-bottom: 20px;
+        }
+        .br_{
+            margin-top: 4px;
+        }
+        /* 사용자 정의 버튼 스타일 */
+        .btn-4 {
+            background-color: #4dccc6;
+            background-image: linear-gradient(315deg, #4dccc6 0%, #96e4df 74%);
+            line-height: 30px;
+            padding: 0px 10px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            font-size: 14px;
+        }
+        .btn-4:hover {
+            background-color: #89d8d3;
+            background-image: linear-gradient(315deg, #89d8d3 0%, #03c8a8 74%);
+        }
+        .btn-4 span {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .btn-4:before,
+        .btn-4:after {
+            position: absolute;
+            content: "";
+            right: 0;
+            top: 0;
+            box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                        -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                        inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                        inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+            transition: all 0.3s ease;
+        }
+        .btn-4:before {
+            height: 0%;
+            width: .1px;
+        }
+        .btn-4:after {
+            width: 0%;
+            height: .1px;
+        }
+        .btn-4:hover:before {
+            height: 100%;
+        }
+        .btn-4:hover:after {
+            width: 100%;
+        }
+        .btn-4 span:before,
+        .btn-4 span:after {
+            position: absolute;
+            content: "";
+            left: 0;
+            bottom: 0;
+            box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                        -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                        inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                        inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+            transition: all 0.3s ease;
+        }
+        .btn-4 span:before {
+            width: .1px;
+            height: 0%;
+        }
+        .btn-4 span:after {
+            width: 0%;
+            height: .1px;
+        }
+        .btn-4 span:hover:before {
+            height: 100%;
+        }
+        .btn-4 span:hover:after {
+            width: 100%;
+        }
+        .add-btn {
+            background-color: #4dccc6;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-left: 10px;
+        }
+        .add-btn:hover {
+            background-color: #03c8a8;
+        }
+        .place-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJgTy_SF1cWb-tBhVyfIhiLDqwuBCCXdg&callback=initMap" async defer></script>
+    <script>
+        let map;
+        let markers = [];
+        let markerIndex = 1;
+        let singleClickMarker = null;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 37.5665, lng: 126.9780 },
+                zoom: 12
+            });
+        }
+
+        function showPlaceOnMap(lat, lng, label = '', isSingleClick = false) {
+            const location = { lat: parseFloat(lat), lng: parseFloat(lng) };
+            if (isSingleClick) {
+                if (singleClickMarker) {
+                    singleClickMarker.setMap(null);
+                }
+                singleClickMarker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    icon: {
+                        url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                    }
+                });
+                map.setCenter(location);
+            } else {
+                const marker = new google.maps.Marker({
+                    position: location,
+                    label: label,
+                    map: map
+                });
+                markers.push(marker);
+                map.setCenter(location);
+            }
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            markerIndex = 1;
+        }
+
+        function addMarkerWithLabel(lat, lng) {
+            showPlaceOnMap(lat, lng, markerIndex.toString());
+            markerIndex++;
+        }
+
+        function toggleMapPopup() {
+            const mapContainer = document.querySelector('.map-container');
+            if (mapContainer.style.display === 'none' || mapContainer.style.display === '') {
+                mapContainer.style.display = 'block';
+                google.maps.event.trigger(map, 'resize');
+            } else {
+                mapContainer.style.display = 'none';
+            }
+        }
+
+        let locationData = "";
+        let itineraryTitle = "";
+        let itinerary = {
+            tourist_attraction: [],
+            restaurant: [],
+            cafe: [],
+            custom: []
+        };
+        let selectedDates = [];
+        let selectedDatePlans = {};
+
+        async function loadPlan(planId) {
+            console.log("Loading plan with ID:", planId);
+            try {
+                const response = await fetch(`/api/plans/${planId}`);
+                const plan = await response.json();
+                console.log("Plan loaded:", plan);
+                if (plan) {
+                    itineraryTitle = plan.title;
+                    selectedDates = getDatesInRange(new Date(plan.start_date), new Date(plan.end_date));
+                    selectedDatePlans = plan.plans || {};
+                    document.getElementById('itinerary-title').value = plan.title;
+                    document.getElementById('start-date').value = plan.start_date;
+                    document.getElementById('end-date').value = plan.end_date;
+                    renderSelectedDates();
+                    populatePlans();
+                    showStep('step3');
+                }
+            } catch (error) {
+                console.error('Error loading plan:', error);
+            }
+        }
+
+        function populatePlans() {
+            console.log("Populating plans", selectedDatePlans);
+            for (const date in selectedDatePlans) {
+                selectedDatePlans[date].forEach(plan => {
+                    addPlanToDate(date, plan);
+                });
+            }
+        }
+
+        function addPlanToDate(date, plan = null) {
+            const plansList = document.getElementById(`plans-${date}`);
+            const planId = `plan-${date}-${plansList.children.length}`;
+            const newPlanItem = document.createElement('li');
+            newPlanItem.className = 'plan-item';
+            newPlanItem.id = planId;
+            newPlanItem.innerHTML = `
+                <input type="text" id="${planId}-time" value="${plan ? plan.time : ''}" placeholder="HH:MM">
+                <input type="text" id="${planId}-place" value="${plan ? plan.placeName : ''}" placeholder="여행지">
+                <input type="text" id="${planId}-details" value="${plan ? plan.details : ''}" placeholder="세부 활동">
+                <button onclick="removePlan('${planId}', ${plan ? plan.location.lat : null}, ${plan ? plan.location.lng : null})" class="btn-4"><span>삭제</span></button>
+            `;
+            newPlanItem.addEventListener('dragover', (event) => {
+                event.preventDefault();
+            });
+            newPlanItem.addEventListener('drop', (event) => {
+                event.preventDefault();
+                const placeData = JSON.parse(event.dataTransfer.getData('text/plain'));
+                document.getElementById(`${planId}-place`).value = placeData.name;
+                document.getElementById(`${planId}-place`).dataset.lat = placeData.location.lat;
+                document.getElementById(`${planId}-place`).dataset.lng = placeData.location.lng;
+                updateMarkers();
+            });
+            plansList.appendChild(newPlanItem);
+        }
+
+        function removePlan(planId, lat, lng) {
+            document.getElementById(planId).remove();
+            updateMarkers();
+        }
+
+        function updateMarkers() {
+            clearMarkers();
+            markerIndex = 1;
+            document.querySelectorAll('.plan-item input[id$="-place"]').forEach(input => {
+                if (input.dataset.lat && input.dataset.lng) {
+                    addMarkerWithLabel(input.dataset.lat, input.dataset.lng);
+                }
+            });
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
+            document.getElementById(step).classList.remove('hidden');
+            if (step === 'step2') {
+                document.getElementById('selected-location').innerText = locationData;
+                fetchItinerary();
+            }
+            if (step === 'step3') {
+                document.getElementById('itinerary-title').value = itineraryTitle;
+                fetchCustomPlaces();
+                renderSelectedDates();
+            }
+        }
+
+        function handleStep1Submit(event) {
+            event.preventDefault();
+            locationData = document.getElementById('location').value;
+            showStep('step2');
+        }
+
+        async function fetchPlaces(location, type) {
+            try {
+                const response = await fetch(`/api/places?location=${location}&type=${type}`);
+                const places = await response.json();
+                renderPlacesList(type, places);
+            } catch (error) {
+                console.error('Error fetching places:', error);
+            }
+        }
+
+        function renderPlacesList(type, places) {
+            const list = document.getElementById(`${type}-list`);
+            list.innerHTML = places.map((place, index) => `
+                <li id="${type}-place-${index}" class="place-item">
+                    <div>
+                        <strong onclick="showPlaceDetails('${place.place_id}', ${place.location.lat}, ${place.location.lng})">${index + 1}. ${place.name}</strong><br>
+                        평점: ${place.rating}<br>
+                        주소: ${place.address}<br>
+                    </div>
+                    <button onclick="addToItinerary('${place.place_id}', '${place.name}', '${place.address}', '${place.rating}', '${place.location.lat}', '${place.location.lng}', '${place.type}', this)" class="add-btn">+</button>
+                </li>
+            `).join('');
+            places.forEach((place, index) => {
+                const placeElement = document.getElementById(`${type}-place-${index}`);
+                makePlaceDraggable(placeElement, place);
+            });
+            document.querySelectorAll('.places-list').forEach(el => el.classList.add('hidden'));
+            list.classList.remove('hidden');
+        }
+
+        function makePlaceDraggable(placeElement, placeData) {
+            placeElement.draggable = true;
+            placeElement.addEventListener('dragstart', (event) => {
+                event.dataTransfer.setData('text/plain', JSON.stringify(placeData));
+            });
+        }
+
+        async function showPlaceDetails(placeId, lat, lng) {
+            showPlaceOnMap(lat, lng, '', true);
+            try {
+                const response = await fetch(`/api/place_details?place_id=${placeId}`);
+                const place = await response.json();
+                if (place) {
+                    showPopup(place);
+                } else {
+                    alert('장소 정보를 가져올 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('Error fetching place details:', error);
+            }
+        }
+
+        async function addToItinerary(placeId, name, address, rating, lat, lng, type, button) {
+            if (isDuplicate(placeId, type)) {
+                alert('이미 일정에 추가된 장소입니다.');
+                return;
+            }
+
+            const place = {
+                place_id: placeId,
+                name,
+                address,
+                rating,
+                location: { lat, lng },
+                type
+            };
+
+            try {
+                const response = await fetch('/add_place', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ place })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`${name}을(를) 일정에 추가했습니다.`);
+                    place._id = result.place._id;
+                    itinerary[type].push(place);
+                    updateItineraryList();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error adding to itinerary:', error);
+            }
+        }
+
+        function isDuplicate(placeId, type) {
+            return itinerary[type].some(place => place.place_id === placeId);
+        }
+
+        async function deleteFromItinerary(placeId, type) {
+            try {
+                const response = await fetch('/delete_place', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ _id: placeId })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    itinerary[type] = itinerary[type].filter(place => place._id !== placeId);
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error deleting from itinerary:', error);
+            }
+        }
+
+        function updateItineraryList() {
+            const types = ['tourist_attraction', 'restaurant', 'cafe', 'custom'];
+            types.forEach(type => {
+                const list = document.getElementById(`itinerary-${type}-list`);
+                list.innerHTML = itinerary[type].map((place, index) => `
+                    <li id="${type}-itinerary-${index}">
+                        <input type="checkbox" id="delete-${place._id}" class="delete-checkbox" onclick="event.stopPropagation()">
+                        <strong onclick="showPlaceDetails('${place.place_id}', ${place.location.lat}, ${place.location.lng})">${index + 1}. ${place.name}</strong>
+                    </li>
+                `).join('');
+                itinerary[type].forEach((place, index) => {
+                    const placeElement = document.getElementById(`${type}-itinerary-${index}`);
+                    makePlaceDraggable(placeElement, place);
+                });
+            });
+        }
+
+        function showPopup(place) {
+            document.getElementById('modal-title').innerText = place.name;
+            document.getElementById('modal-image').src = place.photo_url;
+            document.getElementById('modal-rating').innerText = `평점: ${place.rating}`;
+            document.getElementById('modal-address').innerText = `주소: ${place.address}`;
+            document.getElementById('modal-phone').innerText = `전화번호: ${place.phone_number}`;
+            document.getElementById('modal-hours').innerText = `영업시간: ${place.opening_hours}`;
+            document.getElementById('detailModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        async function fetchItinerary() {
+            try {
+                const response = await fetch('/api/itinerary');
+                const places = await response.json();
+                itinerary = {
+                    tourist_attraction: [],
+                    restaurant: [],
+                    cafe: [],
+                    custom: []
+                };
+                places.forEach(place => itinerary[place.type].push(place));
+                updateItineraryList();
+            } catch (error) {
+                console.error('Error fetching itinerary:', error);
+            }
+        }
+
+        async function searchPlace() {
+            const query = document.getElementById('custom-name-or-address').value;
+            try {
+                const response = await fetch('/search_place', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                });
+                const result = await response.json();
+                const searchResult = document.getElementById('search-result');
+                if (result.success) {
+                    const place = result.place;
+                    searchResult.innerHTML = `
+                        <strong onclick="showPlaceDetails('${place.place_id}', ${place.location.lat}, ${place.location.lng})">${place.name}</strong><br>
+                        평점: ${place.rating}<br>
+                        주소: ${place.address}<br>
+                        <button onclick="addCustomPlace('${place.place_id}', '${place.name}', '${place.address}', '${place.rating}', '${place.location.lat}', '${place.location.lng}', this)" class="add-btn">+</button>
+                    `;
+                } else {
+                    searchResult.innerHTML = result.error;
+                }
+            } catch (error) {
+                console.error('Error searching place:', error);
+            }
+        }
+
+        async function addCustomPlace(placeId, name, address, rating, lat, lng, button) {
+            if (isDuplicate(placeId, 'custom')) {
+                alert('이미 일정에 추가된 장소입니다.');
+                return;
+            }
+
+            const place = {
+                place_id: placeId,
+                name,
+                address,
+                rating,
+                location: { lat, lng },
+                type: 'custom'
+            };
+
+            try {
+                const response = await fetch('/add_place', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ place })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('장소가 추가되었습니다.');
+                    place._id = result.place._id;
+                    itinerary.custom.push(place);
+                    updateItineraryList();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error adding custom place:', error);
+            }
+        }
+
+        async function fetchCustomPlaces() {
+            try {
+                const response = await fetch('/api/custom_places');
+                const places = await response.json();
+                const list = document.getElementById('custom-place-list');
+                list.innerHTML = places.map((place, index) => `
+                    <li id="custom-place-${index}">
+                        <strong onclick="showPlaceDetails('${place.place_id}', ${place.location.lat}, ${place.location.lng})">${index + 1}. ${place.name}</strong><br>
+                        유형: ${place.type}<br>
+                        평점: ${place.rating}<br>
+                        주소: ${place.address}<br>
+                        위치: ${place.location.lat || 'N/A'}, ${place.location.lng || 'N/A'}<br>
+                    </li>
+                `).join('');
+                places.forEach((place, index) => {
+                    const placeElement = document.getElementById(`custom-place-${index}`);
+                    makePlaceDraggable(placeElement, place);
+                });
+            } catch (error) {
+                console.error('Error fetching custom places:', error);
+            }
+        }
+
+        function handleDateSelection() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            itineraryTitle = document.getElementById('itinerary-title').value;
+            if (!startDate || !endDate) {
+                alert('시작 일자와 종료 일자를 선택해주세요.');
+                return;
+            }
+            selectedDates = getDatesInRange(new Date(startDate), new Date(endDate));
+            renderSelectedDates();
+        }
+
+        function getDatesInRange(startDate, endDate) {
+            const dates = [];
+            let currentDate = startDate;
+            while (currentDate <= endDate) {
+                dates.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return dates;
+        }
+
+        function renderSelectedDates() {
+            const list = document.getElementById('selected-dates');
+            list.innerHTML = selectedDates.map(date => `
+                <li>
+                    ${date.toISOString().split('T')[0]} 
+                    <button onclick="addPlanToDate('${date.toISOString().split('T')[0]}')" class="btn-4"><span>계획 추가</span></button>
+                    <ul id="plans-${date.toISOString().split('T')[0]}" style="max-height: 150px; overflow-y: auto;"></ul>
+                </li>
+            `).join('');
+            populatePlans();
+        }
+
+        function savePlans() {
+            selectedDatePlans = {};
+            selectedDates.forEach(date => {
+                const dateKey = date.toISOString().split('T')[0];
+                const plansList = document.getElementById(`plans-${dateKey}`);
+                const plans = [];
+                Array.from(plansList.children).forEach(planItem => {
+                    const time = document.getElementById(`${planItem.id}-time`).value;
+                    const placeName = document.getElementById(`${planItem.id}-place`).value;
+                    const details = document.getElementById(`${planItem.id}-details`).value;
+                    const lat = document.getElementById(`${planItem.id}-place`).dataset.lat;
+                    const lng = document.getElementById(`${planItem.id}-place`).dataset.lng;
+                    plans.push({ time, placeName, details, location: { lat, lng } });
+                });
+                selectedDatePlans[dateKey] = plans;
+            });
+        }
+
+        async function saveItinerary() {
+            savePlans();
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const title = document.getElementById('itinerary-title').value;
+
+            const itineraryData = {
+                title: title,
+                start_date: startDate,
+                end_date: endDate,
+                plans: selectedDatePlans
+            };
+
+            try {
+                const response = await fetch('/save_itinerary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(itineraryData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('여행 일정이 저장되었습니다.');
+                } else if (result.overwrite_prompt) {
+                    const overwrite = confirm('이미 같은 제목의 여행 계획이 있습니다. 덮어쓰시겠습니까?');
+                    if (overwrite) {
+                        await fetch('/save_itinerary', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ ...itineraryData, overwrite: true })
+                        });
+                        alert('여행 일정이 덮어쓰여 저장되었습니다.');
+                    }
+                } else {
+                    alert('일정을 저장하는데 문제가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error saving itinerary:', error);
+            }
+        }
+
+        async function deleteSelectedPlans() {
+            const checkboxes = document.querySelectorAll('.delete-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('삭제할 항목을 선택하세요.');
+                return;
+            }
+            const confirmDelete = confirm(`선택된 ${checkboxes.length}개의 일정을 삭제하시겠습니까?`);
+            if (!confirmDelete) return;
+
+            const deletePromises = [];
+            checkboxes.forEach(checkbox => {
+                const placeId = checkbox.id.split('-')[1];
+                const placeType = checkbox.closest('ul').id.split('-')[1];
+                deletePromises.push(deleteFromItinerary(placeId, placeType));
+            });
+            await Promise.all(deletePromises);
+            fetchItinerary();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            const urlParams = new URLSearchParams(window.location.search);
+            const planId = urlParams.get('planId');
+            console.log("Page loaded with planId:", planId);
+            if (planId) {
+                loadPlan(planId);
+            }
+            fetchCustomPlaces().then(() => {
+                document.querySelectorAll('#custom-place-list li').forEach((placeElement, index) => {
+                    makePlaceDraggable(placeElement, itinerary.custom[index]);
+                });
+            });
+            fetchItinerary();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" style="width: 100px">
+            <p onclick="toggleMapPopup()" style="color: #03c8a8;"><span>Map</span></p>
+            <p onclick="showStep('step1')" style="color: #03c8a8;"><span>Step 1</span></p>
+            <p onclick="showStep('step2')" style="color: #03c8a8;"><span>Step 2</span></p>
+            <p onclick="showStep('step3')" style="color: #03c8a8;"><span>Step 3</span></p>
+        </div>
+        <div class="content">
+            <div id="step1" class="step">
+                <h3>장소 탐색</h3>
+                <form onsubmit="handleStep1Submit(event)">
+                    <label for="location">위치 (도시명):</label>
+                    <input type="text" id="location" name="location" required>
+                    <button type="submit" class="btn-4"><span>검색</span></button>
+                </form>
+            </div>
+            <div id="step2" class="step hidden">
+                <h3 id="selected-location"></h3>
+                <button onclick="fetchPlaces(locationData, 'tourist_attraction')" class="btn-4"><span>명소</span></button>
+                <button onclick="fetchPlaces(locationData, 'restaurant')" class="btn-4"><span>식당</span></button>
+                <button onclick="fetchPlaces(locationData, 'cafe')" class="btn-4"><span>카페</span></button>
+                <div class="br_"></div>
+
+                <h4>관광명소</h4>
+                <ul id="tourist_attraction-list" class="places-list hidden"></ul>
+    
+                <h4>식당</h4>
+                <ul id="restaurant-list" class="places-list hidden"></ul>
+    
+                <h4>카페</h4>
+                <ul id="cafe-list" class="places-list hidden"></ul>
+    
+                <h4>신규 장소 등록</h4>
+                <form onsubmit="event.preventDefault(); searchPlace();">
+                    <label for="custom-name-or-address">상호명 또는 주소:</label>
+                    <input type="text" id="custom-name-or-address" required>
+                    <button type="submit" class="btn-4"><span>검색</span></button>
+                </form>
+    
+                <div id="search-result"></div>
+            </div>
+            <div id="step3" class="step hidden">
+                <h3>여행 일정 만들기</h3>
+                <label for="itinerary-title">여행 제목:</label>
+                <input type="text" id="itinerary-title" class="title-input" placeholder="여행 제목을 입력하세요"><br>
+                <div class="br_"></div>
+                <label for="start-date">시작 일자:</label>
+                <input type="date" id="start-date" required><br>
+                <div class="br_"></div>
+                <label for="end-date">종료 일자:</label>
+                <input type="date" id="end-date" required><br>
+                <div class="br_"></div>
+                <button onclick="handleDateSelection()" class="btn-4"><span>여행 계획 만들기</span></button>
+                <hr/>
+                <div class="br_"></div>
+                <h4>여행 일자</h4>
+                <ul id="selected-dates"></ul>
+                <div class="br_"></div>
+                <button onclick="saveItinerary()" class="btn-4"><span>일정 저장</span></button>
+            </div>
+        </div>
+        <div class="itinerary">
+            <h4>일정 목록</h4>
+    
+            <h5>관광명소</h5>
+            <ul id="itinerary-tourist_attraction-list"></ul>
+    
+            <h5>식당</h5>
+            <ul id="itinerary-restaurant-list"></ul>
+    
+            <h5>카페</h5>
+            <ul id="itinerary-cafe-list"></ul>
+    
+            <h5>사용자 등록 장소</h5>
+            <ul id="itinerary-custom-list"></ul>
+    
+            <button onclick="deleteSelectedPlans()" class="btn-4"><span>선택한 일정 삭제</span></button>
+        </div>
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+        <div id="detailModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2 id="modal-title"></h2>
+                <img id="modal-image" alt="" style="max-height: 300px; width: auto;"><br>
+                <p id="modal-rating"></p>
+                <p id="modal-address"></p>
+                <p id="modal-phone"></p>
+                <p id="modal-hours"></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}

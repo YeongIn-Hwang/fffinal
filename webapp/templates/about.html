@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+    .container {
+            padding: 20px;
+        }
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .hero-image {
+        width: 100%;
+        height: 400px; /* 이미지 높이 설정 */
+        background: url("{{ url_for('static', filename='img/intro0.png') }}") no-repeat center center/cover;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8); /* 반투명 배경색 */
+        padding: 20px;
+        text-align: center;
+        color: black;
+        border-radius: 10px;
+    }
+    .container2 {
+        text-align: center;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    .container2 > div {
+        position: relative;
+        text-align: center;
+    }
+    .container2 img {
+        width: 100%;
+        height: 400px; /* 모든 이미지의 높이를 동일하게 설정 */
+        object-fit: cover; /* 이미지가 컨테이너를 채우도록 조정 */
+    }
+    .text-block {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        text-align: center;
+        color: black;
+    }
+    .text-block hr {
+        border: none;
+        border-top: 2px solid rgb(113, 188, 134);
+        margin: 10px auto;
+        width: 50px;
+    }
+</style>
+
+<body>
+    <div class="hero-image">
+        <div class="hero-text">
+            <h1>UMMM</h1>
+            <hr/>
+            <p>{{ data.about }}</p>
+        </div>
+    </div>
+    <br/>
+    <div class="container2">
+        <div>
+            <img src="{{ url_for('static', filename='img/intro1.png') }}" alt="U">
+        </div>
+        <div>
+            <div class="text-block">
+                <h2>U: Unique</h2>
+                <br/>
+                <hr/>
+                <br/>
+                <p>각 여행 경험은 독특하며, 개인의 관심사와 취향에 맞춰져 있어, 두 번 다시 같은 여행은 없습니다.</p>
+            </div>
+        </div>
+        <div>
+            <div class="text-block">
+                <h2>M: Memorable</h2>
+                <br/>
+                <hr/>
+                <br/>
+                <p>숨막히는 풍경에서 몰입감 있는 문화 체험까지, 평생 기억에 남을 순간들을 만들어드립니다.</p>
+            </div>
+        </div>
+        <div>
+            <img src="{{ url_for('static', filename='img/intro2.png') }}" alt="M">
+        </div>
+        <div>
+            <img src="{{ url_for('static', filename='img/intro3.png') }}" alt="M">
+        </div>
+        <div>
+            <div class="text-block">
+                <h2>M: Magical</h2>
+                <br/>
+                <hr/>
+                <br/>
+                <p>세부 사항 하나하나를 꼼꼼히 계획하여 마법 같은 경험을 제공해드립니다.</p>
+            </div>
+        </div>
+        <div>
+            <div class="text-block">
+                <h2>M: Moments</h2>
+                <br/>
+                <hr/>
+                <br/>
+                <p>해변의 일몰 피크닉부터 숨겨진 모험까지 특별한 순간들을 만듭니다.</p>
+            </div>
+        </div>
+        <div>
+            <img src="{{ url_for('static', filename='img/intro4.png') }}" alt="M">
+        </div>
+    </div>
+</body>
+
+<!-- Footer -->
+<footer class="text-center py-3" style="background-color: #f8f9fa; padding: 20px; border-top: 1px solid #e9ecef;">
+    <p style="margin: 0; color: #6c757d;">개발자: 강성찬, 민준원, 황영인</p>
+</footer>
+<!-- Footer -->
+{% endblock %}

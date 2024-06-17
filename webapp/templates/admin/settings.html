@@ -1,0 +1,186 @@
+
+{% extends "admin/layout.html" %}
+{% block content %}
+<!--Section: Manage Settings-->
+
+<style>
+    body {
+    font-family: Arial, sans-serif;
+}
+.container {
+    padding: 20px;
+}
+.plan-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.plan-item h2 {
+    margin: 0;
+}
+.plan-buttons {
+    display: none;
+    margin-top: 10px;
+}
+.plan-buttons button {
+    margin-right: 10px;
+}
+.back-button {
+    margin-top: 20px;
+}
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn-4 {
+    background-color: #4dccc6;
+    background-image: linear-gradient(315deg, #4dccc6 0%, #96e4df 74%);
+    line-height: 30px;
+    padding: 0px 10px;
+    border: none;
+    color: rgb(255, 255, 255);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    font-size: 14px;
+}
+.btn-4:hover {
+    background-color: #89d8d3;
+    background-image: linear-gradient(315deg, #89d8d3 0%, #03c8a8 74%);
+}
+.btn-4 span {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.btn-4:before,
+.btn-4:after {
+    position: absolute;
+    content: "";
+    right: 0;
+    top: 0;
+    box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+    transition: all 0.3s ease;
+}
+.btn-4:before {
+    height: 0%;
+    width: .1px;
+}
+.btn-4:after {
+    width: 0%;
+    height: .1px;
+}
+.btn-4:hover:before {
+    height: 100%;
+}
+.btn-4:hover:after {
+    width: 100%;
+}
+.btn-4 span:before,
+.btn-4 span:after {
+    position: absolute;
+    content: "";
+    left: 0;
+    bottom: 0;
+    box-shadow: 4px 4px 6px 0 rgba(255, 255, 255, .9),
+                -4px -4px 6px 0 rgba(116, 125, 136, .2),
+                inset -4px -4px 6px 0 rgba(255, 255, 255, .9),
+                inset 4px 4px 6px 0 rgba(116, 125, 136, .3);
+    transition: all 0.3s ease;
+}
+.btn-4 span:before {
+    width: .1px;
+    height: 0%;
+}
+.btn-4 span:after {
+    width: 0%;
+    height: .1px;
+}
+.btn-4 span:hover:before {
+    height: 100%;
+}
+.btn-4 span:hover:after {
+    width: 100%;
+}
+</style>
+
+<section class="mb-4">
+    <div class="card">
+        <!-- include the flashmessage.html and 
+            show if there is any messages send using flash() from the backend -->
+            {% include "flashmessage.html" %}
+        <div class="card-header py-3">
+            <h5 class="mb-0 text-center">
+                <strong>Manage Settings</strong>
+            </h5>
+        </div>
+        <div class="card-body text-center">
+            <!-- form -->
+            <form action="{{ url_for('admin_settings') }}" method="POST" enctype="multipart/form-data">
+                <!-- website_name input -->
+<div class="form-outline mb-4">
+    <input type="text" id="website_name" name="website_name" value="{{ data.website_name }}"
+        class="form-control" />
+    <label class="form-label" for="website_name">Website name</label>
+</div>
+
+<!-- website tagline input -->
+<div class="form-outline mb-4">
+    <input type="text" id="tagline" name="tagline"
+        value="{{ data.tagline }}" class="form-control" />
+    <label class="form-label" for="form3Example3">Website tagline</label>
+</div>
+
+<!-- about me -->
+<div class="form-outline mb-4">
+    <textarea class="form-control" id="about" name="about"
+        rows="10">{{ data.about }}</textarea>
+    <label class="form-label" for="about">About website</label>
+</div>
+
+<!-- Submit button -->
+<input type="hidden" name="_id" value="{{ data._id }}" />
+<button type="submit" class="btn-4">
+    UPDATE Settings
+</button>
+            </form>
+        </div>
+    </div>
+</section>
+<!--Section: Manage Settings-->
+{% endblock %}
